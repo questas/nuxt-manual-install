@@ -1,3 +1,6 @@
+import { access } from 'fs'
+import { rm, mkdir, cp, rename, open } from 'fs/promises'
+
 export default {
   // Target: https://go.nuxtjs.dev/config-target
   target: 'static',
@@ -56,6 +59,51 @@ export default {
     typeCheck: {
       eslint: {
         files: './**/*.{ts,js,vue}'
+      }
+    }
+  },
+
+  hooks: {
+    generate: {
+      done: (generator, error) => {
+        console.log('generate done....')
+        if (error) {
+          return
+        }
+        const publishRoot = '~/generate-test'
+        const distPath = generator.distPath
+        const indexJspPath = `${publishRoot}/index.jsp`
+        const distNuxtPath = generator.distNuxtPath
+        const indexHtmlPath = `${distPath}/index.html`
+        access(publishRoot, (error) => {
+          if (!error) {
+            const nuxtPublishPath = `${publishRoot}/${generator.options.build.publicPath}`
+            rm(nuxtPublishPath, { recursive: true })
+              .catch((error) => {
+                console.log(`failed to remove ${nuxtPublishPath}`)
+                console.log(error)
+              })
+            const indexJsp = `${publishRoot}/index.jsp`
+            rm(indexJsp)
+              .catch((error) => {
+                console.log(`failed to remove ${indexJsp}`)
+                console.log(error)
+              })
+            cp(distNuxtPath, nuxtPublishPath, { recursive: true })
+              .catch((error) => {
+                console.log(`failed to copy ${distNuxtPath} to ${nuxtPublishPath}`)
+                console.log(error)
+              })
+            open(indexHtmlPath)
+              .then((fd) => {
+                const rstream = fd.createReadStream()
+                return { rstream }
+              }).then(({ rstream }) => {
+                open(indexJspPath, 'w')
+              })
+          }
+        })
+        mkdir
       }
     }
   }
