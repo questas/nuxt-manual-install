@@ -1,9 +1,13 @@
 import { access } from 'fs'
 import { rm, mkdir, cp, rename, open } from 'fs/promises'
 
+const isDev = process.env.NODE_ENV === 'dev'
+
 export default {
   // Target: https://go.nuxtjs.dev/config-target
   target: 'static',
+  ssr: isDev,
+  // modern: 'client',
 
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
@@ -48,20 +52,26 @@ export default {
 
   // Build Configuration: https://go.nuxtjs.dev/config-build
   build: {
+    extend(config, { isClient }) {
+      // Extend only webpack config for client-bundle
+      if (isClient) {
+        config.devtool = 'source-map'
+      }
+    }
   },
 
   eslint: {
     /* module options */
   },
 
-  // Runtime Lint
-  typescript: {
-    typeCheck: {
-      eslint: {
-        files: './**/*.{ts,js,vue}'
-      }
-    }
-  },
+  // // Runtime Lint
+  // typescript: {
+  //   typeCheck: {
+  //     eslint: {
+  //       files: './**/*.{ts,js,vue}'
+  //     }
+  //   }
+  // },
 
   hooks: {
     generate: {
